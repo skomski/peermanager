@@ -1,0 +1,18 @@
+{
+  "name": "peermanager",
+  "repo": "skomski/peermanager",
+  "description": "Manager for multiple RTCPeerConnections",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "component/emitter": "*",
+    "skomski/underscore": "*",
+    "skomski/peerconnection": "*",
+    "skomski/node-uuid": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}

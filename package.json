@@ -1,0 +1,16 @@
+{
+  "name": "component-peermanager",
+  "version": "0.0.0",
+  "description": "Manager for multiple peerconnections",
+  "main": "index.js",
+  "scripts": {
+    "test": "testacular run"
+  },
+  "repository": "",
+  "keywords": [
+    "webrtc"
+  ],
+  "author": "Karl Skomski",
+  "license": "MIT",
+  "readmeFilename": "Readme.md"
+}
