@@ -58,7 +58,8 @@ PeerManager.prototype._handleNew = function(peerId) {
 
   var pc = this.peers[peerId] = this._createPeerConnection();
 
-  pc.createOffer(function(description) {
+  pc.createOffer(function(err, description) {
+    if (err) { throw err; }
     self._publishPacket('offer', description);
   });
 };
@@ -75,7 +76,8 @@ PeerManager.prototype._handleOffer = function(peerId, offer) {
 
   var pc = this.peers[peerId] = this._createPeerConnection();
 
-  pc.handleOffer(offer, function(description) {
+  pc.handleOffer(offer, function(err, description) {
+    if (err) { throw err; }
     self._publishPacket('answer', description);
   });
 };
@@ -92,7 +94,9 @@ PeerManager.prototype._handleAnswer = function(peerId, answer) {
     throw new Error('Unknown peer - PeerManager._handleAnswer');
   }
 
-  this.peers[peerId].handleAnswer(answer);
+  this.peers[peerId].handleAnswer(answer, function(err) {
+    if (err) { throw err; }
+  });
 };
 
 PeerManager.prototype._handleCandidate = function(peerId, candidate) {
