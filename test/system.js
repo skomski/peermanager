@@ -1,3 +1,5 @@
+'use strict';
+
 describe('PeerManager', function() {
   it('should get the message from the other peer', function() {
     var peerManager1Message = '';
@@ -8,20 +10,20 @@ describe('PeerManager', function() {
     var options = {
       iceServers: [{ url: 'stun:stun.l.google.com:19302' }],
       packetHandler: function() {}
-    }
+    };
 
     var peerManager1 = new PeerManager(options);
 
     options.packetHandler = function(packet) {
       peerManager1.handlePacket(packet);
-    }
+    };
 
     var peerManager2 = new PeerManager(options);
 
 
     peerManager1.packetHandler = function(packet) {
       peerManager2.handlePacket(packet);
-    }
+    };
 
     peerManager2.announce();
 

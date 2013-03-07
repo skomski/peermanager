@@ -1,17 +1,20 @@
-var Emitter = require('emitter');
+'use strict';
+
+var emitter = require('emitter');
 var _ = require('underscore');
 var PeerConnection = require('peerconnection');
 var uuid = require('node-uuid');
 
 var PeerManager = function(options) {
-  if (!_.isObject(options))
+  if (!_.isObject(options)) {
     throw new Error('options is not an object - new PeerManager');
-  if (!_.isArray(options.iceServers))
+  }
+  if (!_.isArray(options.iceServers)) {
     throw new Error('iceServers is not an array - new PeerManager');
-  if (!_.isFunction(options.packetHandler))
+  }
+  if (!_.isFunction(options.packetHandler)) {
     throw new Error('packetHandler is not a function - new PeerManager');
-
-  var self = this;
+  }
 
   this.iceServers = options.iceServers;
   this.packetHandler = options.packetHandler;
@@ -20,10 +23,10 @@ var PeerManager = function(options) {
 
   this.peers = {};
   this.uuid  = options.uuid || uuid.v4();
-}
+};
 
 module.exports = PeerManager;
-Emitter(PeerManager.prototype);
+emitter(PeerManager.prototype);
 
 PeerManager.prototype._createPeerConnection = function() {
   var self = this;
@@ -37,15 +40,18 @@ PeerManager.prototype._createPeerConnection = function() {
   });
 
   pc.on('DataChannelStateChange', function(state) {
-    if (state === 'open') self.emit('NewPeer', pc);
+    if (state === 'open') {
+      self.emit('NewPeer', pc);
+    }
   });
 
   return pc;
 };
 
 PeerManager.prototype._handleNew = function(peerId) {
-  if (!_.isString(peerId))
+  if (!_.isString(peerId)) {
     throw new Error('peerId is not a string - PeerManager._handleNew');
+  }
 
   var self = this;
 
@@ -54,13 +60,15 @@ PeerManager.prototype._handleNew = function(peerId) {
   pc.createOffer(function(description) {
     self._publishPacket('offer', description);
   });
-}
+};
 
 PeerManager.prototype._handleOffer = function(peerId, offer) {
-  if (!_.isString(peerId))
+  if (!_.isString(peerId)) {
     throw new Error('peerId is not a string - PeerManager._handleOffer');
-  if (!_.isObject(offer))
+  }
+  if (!_.isObject(offer)) {
     throw new Error('offer is not an object - PeerManager._handleOffer');
+  }
 
   var self = this;
 
@@ -69,43 +77,50 @@ PeerManager.prototype._handleOffer = function(peerId, offer) {
   pc.handleOffer(offer, function(description) {
     self._publishPacket('answer', description);
   });
-}
+};
 
 PeerManager.prototype._handleAnswer = function(peerId, answer) {
-  if (!_.isString(peerId))
+  if (!_.isString(peerId)) {
     throw new Error('peerId is not a string - PeerManager._handleAnswer');
-  if (!_.isObject(answer))
+  }
+  if (!_.isObject(answer)) {
     throw new Error('answer is not an object - PeerManager._handleAnswer');
+  }
 
-  if (this.peers[peerId] === undefined)
+  if (this.peers[peerId] === undefined) {
     throw new Error('Unknown peer - PeerManager._handleAnswer');
+  }
 
   this.peers[peerId].handleAnswer(answer);
-}
-
+};
 
 PeerManager.prototype._handleCandidate = function(peerId, candidate) {
-  if (!_.isString(peerId))
-    throw new Error('peerId is not a string - PeerManager._handleIceCandidate');
-  if (!_.isObject(candidate))
-    throw new Error('candidate is not an object - PeerManager._handleIceCandidate');
+  if (!_.isString(peerId)) {
+    throw new Error(
+      'peerId is not a string - PeerManager._handleIceCandidate');
+  }
+  if (!_.isObject(candidate)) {
+    throw new Error(
+      'candidate is not an object - PeerManager._handleIceCandidate');
+  }
 
-  if (this.peers[peerId] === undefined)
+  if (this.peers[peerId] === undefined) {
     throw new Error('Unknown peer - PeerManager._handleIceCandidate');
+  }
 
   this.peers[peerId].addIceCandidate(candidate);
-}
+};
 
 PeerManager.prototype.handlePacket = function(packet) {
-  if (!_.isString(packet))
+  if (!_.isString(packet)) {
     throw new Error('packet is not a string - PeerManager.handlePacket');
+  }
 
-  var self = this
+  packet = JSON.parse(packet);
 
-  var packet = JSON.parse(packet);
-
-  if (this.logMessages)
-    console.log('REC ', packet.operation, packet.origin, packet);
+  if (this.logMessages) {
+    this.emit('Handle', packet.operation, packet.origin, packet);
+  }
 
   switch(packet.operation) {
     case 'new':
@@ -121,14 +136,15 @@ PeerManager.prototype.handlePacket = function(packet) {
       this._handleCandidate(packet.origin, packet.data);
       break;
     default:
-      throw new Error('Unknown operation in packet - PeerManager.handlePacket')
-      break;
+      throw new Error(
+        'Unknown operation in packet - PeerManager.handlePacket');
   }
-}
+};
 
 PeerManager.prototype._publishPacket = function(operation, data) {
-  if (this.logMessages)
-    console.log('PUB ', operation, this.uuid);
+  if (this.logMessages) {
+    this.emit('Publish', operation, this.uuid);
+  }
 
   var packet = JSON.stringify({
     operation : operation,
@@ -136,31 +152,35 @@ PeerManager.prototype._publishPacket = function(operation, data) {
     data      : data
   });
   this.packetHandler(packet);
-}
+};
 
 PeerManager.prototype.announce = function() {
   var self = this;
 
   self._publishPacket('new');
-}
+};
 
 PeerManager.prototype.send = function(peerId, data) {
-  if (!_.isString(peerId))
+  if (!_.isString(peerId)) {
     throw new Error('peerId is not a string - PeerManager.send');
-  if (!data)
+  }
+  if (!data) {
     throw new Error('data is not present - PeerManager.send');
+  }
 
-  if (this.peers[peerId] === undefined)
+  if (this.peers[peerId] === undefined) {
     throw new Error('Unknown peer - PeerManager.send');
+  }
 
   this.peer[peerId].send(data);
-}
+};
 
 PeerManager.prototype.broadcast = function(data) {
-  if (!data)
+  if (!data) {
     throw new Error('data is not present - PeerManager.broadcast');
+  }
 
   _.each(this.peers, function(peer) {
     peer.send(data);
   });
-}
+};
