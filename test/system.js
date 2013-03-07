@@ -31,14 +31,14 @@ describe('PeerManager', function() {
     window.peerManager2 = peerManager2;
 
     peerManager1.on('NewPeer', function(peer) {
-      peer.on('Message', function(message) {
+      peer.on('DataChannelMessage', function(message) {
         peerManager2Message = message;
       });
       peer.send('hello peer2');
     });
 
     peerManager2.on('NewPeer', function(peer) {
-      peer.on('Message', function(message) {
+      peer.on('DataChannelMessage', function(message) {
         peerManager1Message = message;
       });
       peer.send('hello peer1');

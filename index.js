@@ -19,7 +19,7 @@ var PeerManager = function(options) {
   this.iceServers = options.iceServers;
   this.packetHandler = options.packetHandler;
 
-  this.logMessages = false;
+  this.emitPackets = false;
 
   this.peers = {};
   this.uuid  = options.uuid || uuid.v4();
@@ -32,7 +32,8 @@ PeerManager.prototype._createPeerConnection = function() {
   var self = this;
 
   var pc = new PeerConnection({
-    iceServers: this.iceServers
+    iceServers: this.iceServers,
+    enableDataChannel: true
   });
 
   pc.on('IceCandidate', function(candidate) {
@@ -119,7 +120,7 @@ PeerManager.prototype.handlePacket = function(packet) {
   packet = JSON.parse(packet);
 
   if (this.logMessages) {
-    this.emit('Handle', packet.operation, packet.origin, packet);
+    this.emit('HandlePacket', packet.operation, packet.origin, packet);
   }
 
   switch(packet.operation) {
@@ -143,7 +144,7 @@ PeerManager.prototype.handlePacket = function(packet) {
 
 PeerManager.prototype._publishPacket = function(operation, data) {
   if (this.logMessages) {
-    this.emit('Publish', operation, this.uuid);
+    this.emit('PublishPacket', operation, this.uuid);
   }
 
   var packet = JSON.stringify({
