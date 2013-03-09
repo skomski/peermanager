@@ -19,7 +19,7 @@ var PeerManager = function(options) {
   this.iceServers = options.iceServers;
   this.packetHandler = options.packetHandler;
 
-  this.emitPackets = false;
+  this.logPackets = options.logPackets || false;
 
   this.peers = {};
   this.uuid  = options.uuid || uuid.v4();
@@ -54,8 +54,9 @@ PeerManager.prototype._handleNew = function(peerId) {
     throw new Error('peerId is not a string - PeerManager._handleNew');
   }
 
-  var self = this;
+  if (this.peers[peerId] !== undefined) { return; }
 
+  var self = this;
   var pc = this.peers[peerId] = this._createPeerConnection();
 
   pc.createOffer(function(err, description) {
@@ -94,8 +95,12 @@ PeerManager.prototype._handleAnswer = function(peerId, answer) {
     throw new Error('Unknown peer - PeerManager._handleAnswer');
   }
 
+  if (this.peers[peerId].readyState === 'closed') {
+    return;
+  }
+
   this.peers[peerId].handleAnswer(answer, function(err) {
-    if (err) { throw err; }
+    if (err) { throw err.internalError; }
   });
 };
 
@@ -123,8 +128,10 @@ PeerManager.prototype.handlePacket = function(packet) {
 
   packet = JSON.parse(packet);
 
-  if (this.logMessages) {
-    this.emit('HandlePacket', packet.operation, packet.origin, packet);
+  if (packet.origin === this.uuid) { return; }
+
+  if (this.logPackets && packet.operation !== 'candidate') {
+    console.log('REC', packet.operation, packet.origin, packet);
   }
 
   switch(packet.operation) {
@@ -147,8 +154,8 @@ PeerManager.prototype.handlePacket = function(packet) {
 };
 
 PeerManager.prototype._publishPacket = function(operation, data) {
-  if (this.logMessages) {
-    this.emit('PublishPacket', operation, this.uuid);
+  if (this.logPackets && operation !== 'candidate') {
+    console.log('PUB', operation, this.uuid);
   }
 
   var packet = JSON.stringify({

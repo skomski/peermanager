@@ -56,7 +56,8 @@ module.exports = function (grunt) {
         globalstrict: true,
         globals: {
           require: true,
-          module: true
+          module: true,
+          console: true
         }
       },
       with_overrides: {
